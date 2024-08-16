@@ -38,6 +38,7 @@ public class ErrorHandlerController {
     }
 
     @ExceptionHandler(CustomException.class)
+    @ResponseStatus(value = HttpStatus.OK)
     public BaseResponse businessLogicException(CustomException ce) {
         log.error("BusinessLogicException = {}", ce.getMessage(), ce);
         return ResponseHelper.constructResponse(ce.getCode(), ce.getMessage(), null, null);

@@ -35,21 +35,20 @@ public class SnapPaymentOutboundServiceImpl implements SnapPaymentOutboundServic
         return Mono.defer(() -> {
             Map<String, String> header = headerBuilder();
             return midtransEndpointService.createTransaction(header, requestDto)
-                    .<TransactionResponseDto>handle((response, sink) -> {
-                        if (response.code() != 201 || response.body() == null) {
-                            log.error("Payment status not created on orderID {} ", requestDto);
-                            sink.error(new CustomException(
-                                    ResponseCode.FAILED.getCode(),
-                                    ResponseCode.FAILED.getMessage()));
-                            return;
-                        }
-                        sink.next(response.body());
-                    })
                     .onErrorResume(e -> {
                         log.error("Error occurred during status payment request ", e);
                         return Mono.error(new CustomException(
                                 ResponseCode.THIRD_PARTY_ERROR.getCode(),
                                 ResponseCode.THIRD_PARTY_ERROR.getMessage()));
+                    })
+                    .<TransactionResponseDto>handle((response, sink) -> {
+                        if (response.code() != 201 || response.body() == null) {
+                            log.error("Payment status not created on orderID {} ", requestDto);
+                            sink.error(new CustomException(
+                                    ResponseCode.FAILED.getCode(), response.message()));
+                            return;
+                        }
+                        sink.next(response.body());
                     });
         });
     }
@@ -59,6 +58,12 @@ public class SnapPaymentOutboundServiceImpl implements SnapPaymentOutboundServic
         return Mono.defer(() -> {
             Map<String, String> header = headerBuilder();
             return midtransEndpointService.statusTransaction(header, orderId)
+                    .onErrorResume(e -> {
+                        log.error("Error occurred during status payment request ", e);
+                        return Mono.error(new CustomException(
+                                ResponseCode.THIRD_PARTY_ERROR.getCode(),
+                                ResponseCode.THIRD_PARTY_ERROR.getMessage()));
+                    })
                     .<TransactionStatusDto>handle((response, sink) -> {
                         if (response.code() != 200 || response.body() == null) {
                             log.error("Payment status not created on orderID {} ", orderId);
@@ -68,12 +73,6 @@ public class SnapPaymentOutboundServiceImpl implements SnapPaymentOutboundServic
                             return;
                         }
                         sink.next(response.body());
-                    })
-                    .onErrorResume(e -> {
-                        log.error("Error occurred during status payment request ", e);
-                        return Mono.error(new CustomException(
-                                ResponseCode.THIRD_PARTY_ERROR.getCode(),
-                                ResponseCode.THIRD_PARTY_ERROR.getMessage()));
                     });
 
         });
@@ -84,6 +83,12 @@ public class SnapPaymentOutboundServiceImpl implements SnapPaymentOutboundServic
         return Mono.defer(() -> {
             Map<String, String> header = headerBuilder();
             return midtransEndpointService.cancelTransaction(header, orderId)
+                    .onErrorResume(e -> {
+                        log.error("Error occurred during cancel payment request ", e);
+                        return Mono.error(new CustomException(
+                                ResponseCode.THIRD_PARTY_ERROR.getCode(),
+                                ResponseCode.THIRD_PARTY_ERROR.getMessage()));
+                    })
                     .<TransactionCancelDto>handle((response, sink) -> {
                         if (response.code() != 200 || response.body() == null) {
                             log.error("Payment status failed to cancel on orderID {} ", orderId);
@@ -93,12 +98,6 @@ public class SnapPaymentOutboundServiceImpl implements SnapPaymentOutboundServic
                             return;
                         }
                         sink.next(response.body());
-                    })
-                    .onErrorResume(e -> {
-                        log.error("Error occurred during cancel payment request ", e);
-                        return Mono.error(new CustomException(
-                                ResponseCode.THIRD_PARTY_ERROR.getCode(),
-                                ResponseCode.THIRD_PARTY_ERROR.getMessage()));
                     });
         });
     }

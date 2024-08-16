@@ -1,11 +1,13 @@
 package com.payment.midtrans.model;
 
 import lombok.Builder;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+@Data
 @Builder
 public class BaseResponse <T> implements Serializable {
     private String code;

@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping(ApiPath.SNAP)
-public class SnapPaymentController {
+public class SnapPaymentController extends ErrorHandlerController {
 
     private final SnapPaymentService snapPaymentService;
 
